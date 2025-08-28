@@ -17,7 +17,7 @@ from utils.io import iter_xml_paths_from_dir
 # ---------------------------
 # Config da página
 # ---------------------------
-st.set_page_config(page_title="Leitor de XML de Notas → Excel", layout="wide")
+st.set_page_config(page_title="Leitor XML de Notas → Excel", layout="wide")
 
 # ---- Estado (cache leve) ----
 if "df" not in st.session_state:
@@ -64,7 +64,7 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
 # ---------------------------
 # Cabeçalho (hero)
 # ---------------------------
-st.title("📄 Leitor de XML de Notas Fiscais → Excel")
+st.title("📄 Leitor XML de Notas Fiscais → Excel")
 
 col_logo, col_head = st.columns([1, 6], vertical_alignment="center")
 with col_logo:
