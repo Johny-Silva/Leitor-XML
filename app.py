@@ -545,6 +545,7 @@ if df is not None and not df.empty:
         "_parser","_arquivo","chave","nNF","serie","emissao",
         "emit_CNPJ","emit_xNome","dest_CNPJ","dest_xNome",
         "vNF","movimento","CFOPs_itens","CFOP_predominante",
+        "vBC_ICMS","vICMS","vBC_ST","vICMS_ST",
     ]
     df_view = df_view[[c for c in COLS_MIN if c in df_view.columns]]
 
@@ -657,6 +658,10 @@ else:
                         "movimento": "Tipo (Entrada/Saída)",
                         "CFOPs_itens": "CFOP(s) da Nota",
                         "CFOP_predominante": "CFOP Predominante",
+                        "vBC_ICMS": "BC ICMS",
+                        "vICMS": "Valor ICMS",
+                        "vBC_ST": "BC ICMS ST",
+                        "vICMS_ST": "Valor ICMS ST",
                     }
                     df_xl = df_xl.rename(columns=colunas_novas)
                     df_xl.to_excel(writer, index=False, sheet_name="Notas")
@@ -672,6 +677,10 @@ else:
 
                     fmt_col("Valor", 'R$ #,##0.00')
                     fmt_col("Data de Emissão", 'dd/mm/yyyy hh:mm:ss')
+                    fmt_col("BC ICMS", 'R$ #,##0.00')
+                    fmt_col("Valor ICMS", 'R$ #,##0.00')
+                    fmt_col("BC ICMS ST", 'R$ #,##0.00')
+                    fmt_col("Valor ICMS ST", 'R$ #,##0.00')
 
                 st.download_button(
                     "⬇️ Baixar Excel",
