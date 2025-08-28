@@ -91,7 +91,89 @@ class NFCeParser:
         if soma_por_cfop:
             cfop_pred = max(soma_por_cfop.items(), key=lambda kv: kv[1])[0]
 
+        # ===== Totais ICMSTot (primeira tentativa) =====
+        vBC_tot  = _to_number(_txt(total, "vBC"))
+        vICMS_tot = _to_number(_txt(total, "vICMS"))
+        vBCST_tot = _to_number(_txt(total, "vBCST"))
+        vST_tot   = _to_number(_txt(total, "vST"))
+
+        # ===== Fallback por itens, se necessário =====
+        # Soma por ICMS "próprio"
+        if (vBC_tot is None or vBC_tot == 0.0) or (vICMS_tot is None or vICMS_tot == 0.0):
+            s_vBC_it = 0.0
+            s_vICMS_it = 0.0
+            achou_icms_item = False
+            for det in nfe.findall(f".//{{{NFE_NS}}}det"):
+                icms = det.find(f"./{{{NFE_NS}}}imposto/{{{NFE_NS}}}ICMS")
+                if icms is None:
+                    continue
+                # pega o primeiro grupo ICMS* existente
+                grp = next((child for child in icms if isinstance(child.tag, str)), None)
+                if grp is None:
+                    continue
+                vbc_i = _to_number(_txt(grp, "vBC"))
+                vicms_i = _to_number(_txt(grp, "vICMS"))
+                if vbc_i is not None:
+                    s_vBC_it += vbc_i
+                    achou_icms_item = True
+                if vicms_i is not None:
+                    s_vICMS_it += vicms_i
+                    achou_icms_item = True
+            if achou_icms_item:
+                # só substitui se estava vazio/zero nos totais
+                if (vBC_tot is None or vBC_tot == 0.0):
+                    vBC_tot = s_vBC_it
+                if (vICMS_tot is None or vICMS_tot == 0.0):
+                    vICMS_tot = s_vICMS_it
+
+        # Soma por ST (normal e retida)
+        if (vBCST_tot is None or vBCST_tot == 0.0) or (vST_tot is None or vST_tot == 0.0):
+            s_vBCST_it = 0.0
+            s_vICMSST_it = 0.0
+            achou_st_item = False
+            for det in nfe.findall(f".//{{{NFE_NS}}}det"):
+                icms = det.find(f"./{{{NFE_NS}}}imposto/{{{NFE_NS}}}ICMS")
+                if icms is None:
+                    continue
+                grp = next((child for child in icms if isinstance(child.tag, str)), None)
+                if grp is None:
+                    continue
+                # ST "normal"
+                vbcst_i = _to_number(_txt(grp, "vBCST"))
+                vicmsst_i = _to_number(_txt(grp, "vICMSST"))
+                # ST retida (CST 60)
+                vbcst_ret_i = _to_number(_txt(grp, "vBCSTRet"))
+                vicmsst_ret_i = _to_number(_txt(grp, "vICMSSTRet"))
+                # alguns emissores trazem também vICMSSubstituto
+                vicms_subst_i = _to_number(_txt(grp, "vICMSSubstituto"))
+
+                if vbcst_i is not None:
+                    s_vBCST_it += vbcst_i
+                    achou_st_item = True
+                if vicmsst_i is not None:
+                    s_vICMSST_it += vicmsst_i
+                    achou_st_item = True
+
+                if vbcst_ret_i is not None:
+                    s_vBCST_it += vbcst_ret_i
+                    achou_st_item = True
+                if vicmsst_ret_i is not None:
+                    s_vICMSST_it += vicmsst_ret_i
+                    achou_st_item = True
+
+                if vicms_subst_i is not None:
+                    s_vICMSST_it += vicms_subst_i
+                    achou_st_item = True
+
+            if achou_st_item:
+                if (vBCST_tot is None or vBCST_tot == 0.0):
+                    vBCST_tot = s_vBCST_it
+                if (vST_tot is None or vST_tot == 0.0):
+                    vST_tot = s_vICMSST_it
+
+        # Inclui no dict de retorno
         return {
+            # ... (todos os campos que você já retorna)
             "chave": chave,
             "nNF": nNF,
             "serie": serie,
@@ -103,7 +185,11 @@ class NFCeParser:
             "dest_xNome": dest_nome,
             "vNF": vNF,
             "modelo": modelo,
-            # 🆕 CFOPs
             "CFOPs_itens": cfops_unicos,
             "CFOP_predominante": cfop_pred,
+            # 🆕 Totais ICMS / ST (nota)
+            "vBC_ICMS": vBC_tot,
+            "vICMS": vICMS_tot,
+            "vBC_ST": vBCST_tot,
+            "vICMS_ST": vST_tot,
         }
