@@ -1,0 +1,7 @@
+[theme]
+base="light"            # "dark" se preferir
+primaryColor="#2563eb"  # azul elegante
+backgroundColor="#ffffff"
+secondaryBackgroundColor="#f6f8fc"
+textColor="#0f172a"
+font="sans serif"
